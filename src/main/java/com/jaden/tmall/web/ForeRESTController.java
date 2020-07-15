@@ -5,6 +5,12 @@ import com.jaden.tmall.pojo.*;
 import com.jaden.tmall.service.*;
 import com.jaden.tmall.util.Result;
 import org.apache.commons.lang.math.RandomUtils;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.crypto.SecureRandomNumberGenerator;
+import org.apache.shiro.crypto.hash.SimpleHash;
+import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.HtmlUtils;
@@ -44,7 +50,7 @@ public class ForeRESTController {
         return cs;
     }
 
-    //前台——注册用户
+    //前台——注册用户--shiro集成（明文加密成密文）
     @PostMapping("/foreregister")
     public Object register(@RequestBody User user) {
         String name =  user.getName();
@@ -58,19 +64,30 @@ public class ForeRESTController {
             return Result.fail(message);
         }
 
-        user.setPassword(password);
+        //user.setPassword(password);
+        /**
+         * 获得salt
+         * 根据加密方式、明文密码、salt、次数获得 密文
+         * 把salt、密文写入用户属性
+         */
+        String salt = new SecureRandomNumberGenerator().nextBytes().toString();
+        int times = 2;
+        String algorithmName = "md5";
+        String encodedPassword = new SimpleHash(algorithmName, password, salt, times).toString();
+        user.setSalt(salt);
+        user.setPassword(encodedPassword);
 
         userService.add(user);
 
         return Result.success();
     }
-    //前台——登陆用户
+    //前台——登陆用户--shiro集成（登陆的时候， 通过 Shiro的方式进行校验）
     @PostMapping("/forelogin")
     public Object login(@RequestBody User userParam, HttpSession session) {
         String name =  userParam.getName();
         name = HtmlUtils.htmlEscape(name);
 
-        User user =userService.get(name,userParam.getPassword());
+        /*User user =userService.get(name,userParam.getPassword());
         if(null==user){
             String message ="账号密码错误";
             return Result.fail(message);
@@ -78,6 +95,17 @@ public class ForeRESTController {
         else{
             session.setAttribute("user", user);
             return Result.success();
+        }*/
+        Subject subject = SecurityUtils.getSubject();
+        UsernamePasswordToken token = new UsernamePasswordToken(name, userParam.getPassword());
+        try {
+            subject.login(token);
+            User user = userService.getByName(name);
+            session.setAttribute("user", user);
+            return Result.success();
+        } catch (AuthenticationException e) {
+            String message ="账号密码错误";
+            return Result.fail(message);
         }
     }
 
@@ -104,13 +132,18 @@ public class ForeRESTController {
         return Result.success(map);
     }
 
-    //点击：立即购买和加入购物车 按钮时先判断是否登陆
+    //点击：立即购买和加入购物车 按钮时先判断是否登陆--shiro集成（使用 subject.isAuthenticated()判断是否登陆）
     @GetMapping("forecheckLogin")
-    public Object checkLogin( HttpSession session) {
-        User user =(User)  session.getAttribute("user");
+    public Object checkLogin( /*HttpSession session*/) {
+        /*User user =(User)  session.getAttribute("user");
         if(null!=user)
             return Result.success();
-        return Result.fail("未登录");
+        return Result.fail("未登录");*/
+        Subject subject = SecurityUtils.getSubject();
+        if(subject.isAuthenticated())
+            return Result.success();
+        else
+            return Result.fail("未登录");
     }
 
     @GetMapping("forecategory/{cid}")

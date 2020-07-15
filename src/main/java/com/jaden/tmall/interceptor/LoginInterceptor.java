@@ -12,6 +12,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 public class LoginInterceptor implements HandlerInterceptor {
+
+    //登陆拦截器--shiro集成（拦截器里会判断是否登陆，切换为 Shiro 方式：subject.isAuthenticated()）
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
         HttpSession session = httpServletRequest.getSession();
@@ -48,8 +50,13 @@ public class LoginInterceptor implements HandlerInterceptor {
         String page = uri;
 
         if(begingWith(page, requireAuthPages)){
-            User user = (User) session.getAttribute("user");
+            /*User user = (User) session.getAttribute("user");
             if(user==null) {
+                httpServletResponse.sendRedirect("login");
+                return false;
+            }*/
+            Subject subject = SecurityUtils.getSubject();
+            if(!subject.isAuthenticated()) {
                 httpServletResponse.sendRedirect("login");
                 return false;
             }
