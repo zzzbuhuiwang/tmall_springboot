@@ -17,7 +17,7 @@ import java.io.IOException;
 /**
  * @RestController
  *  RESTFUL 服务器控制器、一个控制器，并且对每个方法的返回值都会直接转换为 json 数据格式。
- *  分类服务控制器
+ *
  */
 @RestController
 public class CategoryController {
