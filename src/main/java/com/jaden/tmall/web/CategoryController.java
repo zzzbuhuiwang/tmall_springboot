@@ -4,6 +4,8 @@ import com.jaden.tmall.pojo.Category;
 import com.jaden.tmall.service.CategoryService;
 import com.jaden.tmall.util.ImageUtil;
 import com.jaden.tmall.util.Page4Navigator;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,10 +21,12 @@ import java.io.IOException;
  *  RESTFUL 服务器控制器、一个控制器，并且对每个方法的返回值都会直接转换为 json 数据格式。
  *
  */
+@Api(value = "分类服务控制器",tags = "标识-分类服务控制器")
 @RestController
 public class CategoryController {
 	@Autowired CategoryService categoryService;
 
+	@ApiOperation(value = "查询分类列表信息",notes = "分类列表")
 	@GetMapping("/categories")
 	public Page4Navigator<Category> list(@RequestParam(value = "start", defaultValue = "0") int start, @RequestParam(value = "size", defaultValue = "5") int size) throws Exception {
 		start = start<0?0:start;
@@ -36,6 +40,7 @@ public class CategoryController {
 		saveOrUpdateImageFile(bean, image, request);
 		return bean;
 	}
+
 	public void saveOrUpdateImageFile(Category bean, MultipartFile image, HttpServletRequest request)
 			throws IOException {
 		File imageFolder= new File(request.getServletContext().getRealPath("img/category"));

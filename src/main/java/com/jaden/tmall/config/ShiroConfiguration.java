@@ -25,6 +25,11 @@ public class ShiroConfiguration {
         return shiroFilterFactoryBean;
     }
 
+    /**
+     * <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+     *    <property name="realm" ref="MyRealm"/>
+     * </bean>
+     */
     @Bean
     public SecurityManager securityManager(){
         DefaultWebSecurityManager securityManager =  new DefaultWebSecurityManager();
@@ -44,6 +49,9 @@ public class ShiroConfiguration {
         return new LifecycleBeanPostProcessor();
     }
 
+    /**
+     * 定义凭证匹配器
+     */
     @Bean
     public HashedCredentialsMatcher hashedCredentialsMatcher(){
         HashedCredentialsMatcher hashedCredentialsMatcher = new HashedCredentialsMatcher();
